@@ -15,36 +15,35 @@ public interface IUserRepository
 
 public class UserRepository : IUserRepository
 {
-    private readonly string _connectionString;
-
-    public UserRepository(IConfiguration configuration)
+    public UserRepository()
     {
-        _connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
     }
 
     public async Task<User?> GetByUsernameAsync(string username)
     {
-        using var connection = new SqlConnection(_connectionString);
+        using var connection = DbConnectionFactory.Create();
         return await connection.QueryFirstOrDefaultAsync<User>(
-            "SELECT * FROM Users WHERE Username = @Username AND IsActive = 1",
-            new { Username = username });
+            "usp_GetUserByUsername",
+            new { Username = username },
+            commandType: System.Data.CommandType.StoredProcedure);
     }
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        using var connection = new SqlConnection(_connectionString);
+        using var connection = DbConnectionFactory.Create();
         return await connection.QueryFirstOrDefaultAsync<User>(
-            "SELECT * FROM Users WHERE Email = @Email AND IsActive = 1",
-            new { Email = email });
+            "usp_GetUserByEmail",
+            new { Email = email },
+            commandType: System.Data.CommandType.StoredProcedure);
     }
 
     public async Task<User?> GetByIdAsync(int id)
     {
-        using var connection = new SqlConnection(_connectionString);
+        using var connection = DbConnectionFactory.Create();
         return await connection.QueryFirstOrDefaultAsync<User>(
-            "SELECT * FROM Users WHERE Id = @Id AND IsActive = 1",
-            new { Id = id });
+            "usp_GetUserById",
+            new { Id = id },
+            commandType: System.Data.CommandType.StoredProcedure);
     }
 
     public async Task<User> CreateUserAsync(RegisterRequest request)
@@ -52,31 +51,29 @@ public class UserRepository : IUserRepository
         var salt = GenerateSalt();
         var passwordHash = HashPassword(request.Password, salt);
 
-        using var connection = new SqlConnection(_connectionString);
-        
-        var userId = await connection.QuerySingleAsync<int>(@"
-            INSERT INTO Users (Username, Email, PasswordHash, Salt, Role, CreatedAt) 
-            OUTPUT INSERTED.Id
-            VALUES (@Username, @Email, @PasswordHash, @Salt, @Role, @CreatedAt);",
-            new
-            {
-                Username = request.Username,
-                Email = request.Email,
-                PasswordHash = passwordHash,
-                Salt = salt,
-                Role = request.Role,
-                CreatedAt = DateTime.UtcNow
-            });
+        using var connection = DbConnectionFactory.Create();
+        var parameters = new DynamicParameters();
+        parameters.Add("@Username", request.Username);
+        parameters.Add("@Email", request.Email);
+        parameters.Add("@PasswordHash", passwordHash);
+        parameters.Add("@Salt", salt);
+        parameters.Add("@Role", request.Role);
+        parameters.Add("@CreatedAt", DateTime.UtcNow);
+        parameters.Add("@NewId", dbType: System.Data.DbType.Int32, direction: System.Data.ParameterDirection.Output);
 
-        return await GetByIdAsync(userId) ?? throw new InvalidOperationException("Failed to create user");
+        await connection.ExecuteAsync("usp_CreateUser", parameters, commandType: System.Data.CommandType.StoredProcedure);
+        var newId = parameters.Get<int>("@NewId");
+
+        return await GetByIdAsync(newId) ?? throw new InvalidOperationException("Failed to create user");
     }
 
     public async Task UpdateLastLoginAsync(int userId)
     {
-        using var connection = new SqlConnection(_connectionString);
+        using var connection = DbConnectionFactory.Create();
         await connection.ExecuteAsync(
-            "UPDATE Users SET LastLoginAt = @LastLoginAt WHERE Id = @Id",
-            new { Id = userId, LastLoginAt = DateTime.UtcNow });
+            "usp_UpdateLastLogin",
+            new { Id = userId, LastLoginAt = DateTime.UtcNow },
+            commandType: System.Data.CommandType.StoredProcedure);
     }
 
     private static string GenerateSalt()

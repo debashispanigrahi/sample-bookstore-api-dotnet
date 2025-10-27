@@ -1,5 +1,6 @@
 using System.Net;
-using System.Text.Json;
+using FluentResults;
+using SmartBookStore.API.Models;
 
 namespace SmartBookStore.API.Middleware;
 
@@ -31,49 +32,25 @@ public class ExceptionMiddleware
     {
         context.Response.ContentType = "application/json";
         
-        var response = new
+        var (statusCode, message) = exception switch
         {
-            StatusCode = (int)HttpStatusCode.InternalServerError,
-            Message = "An error occurred while processing your request",
-            Details = exception.Message
+            ArgumentNullException or ArgumentException => (HttpStatusCode.BadRequest, "Invalid request parameters"),
+            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Unauthorized access"),
+            KeyNotFoundException => (HttpStatusCode.NotFound, "Resource not found"),
+            _ => (HttpStatusCode.InternalServerError, "An error occurred while processing your request")
         };
 
-        switch (exception)
-        {
-            case ArgumentNullException:
-            case ArgumentException:
-                response = new
-                {
-                    StatusCode = (int)HttpStatusCode.BadRequest,
-                    Message = "Invalid request parameters",
-                    Details = exception.Message
-                };
-                break;
-            case UnauthorizedAccessException:
-                response = new
-                {
-                    StatusCode = (int)HttpStatusCode.Unauthorized,
-                    Message = "Unauthorized access",
-                    Details = exception.Message
-                };
-                break;
-            case KeyNotFoundException:
-                response = new
-                {
-                    StatusCode = (int)HttpStatusCode.NotFound,
-                    Message = "Resource not found",
-                    Details = exception.Message
-                };
-                break;
-        }
-
-        context.Response.StatusCode = response.StatusCode;
+        var response = ApiResponse<object>.Failure(message, statusCode);
+        context.Response.StatusCode = (int)statusCode;
         
-        var jsonResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        await context.Response.WriteAsJsonAsync(response);
+    }
+}
 
-        await context.Response.WriteAsync(jsonResponse);
+public static class ExceptionMiddlewareExtensions
+{
+    public static IApplicationBuilder UseExceptionMiddleware(this IApplicationBuilder builder)
+    {
+        return builder.UseMiddleware<ExceptionMiddleware>();
     }
 }

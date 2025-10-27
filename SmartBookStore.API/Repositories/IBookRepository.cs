@@ -1,6 +1,5 @@
 using System;
 using Dapper;
-using FluentResults;
 using Microsoft.Data.SqlClient;
 using SmartBookStore.API.Models;
 
@@ -8,54 +7,38 @@ namespace SmartBookStore.API.Repositories;
 
 public interface IBookRepository
 {
-    Task<Result<IEnumerable<Book>>> GetAllAsync();
-    Task<Result<int>> CreateAsync(Book book);
+    Task<IEnumerable<Book>> GetAllAsync();
+    Task<int> CreateAsync(Book book);
 }
 
-public class BookRepository(IConfiguration config) : IBookRepository
+public class BookRepository : IBookRepository
 {
-    private SqlConnection CreateConnection()
+    public BookRepository()
     {
-        var conn = new SqlConnection(config.GetConnectionString("DefaultConnection"));
-        return conn; // caller uses 'using var' (dispose) and opens implicitly on first use
     }
 
-    public async Task<Result<IEnumerable<Book>>> GetAllAsync()
+    public async Task<IEnumerable<Book>> GetAllAsync()
     {
-        try
-        {
-            using var connection = CreateConnection();
-            var sql = "SELECT * FROM Books";
-            var books = await connection.QueryAsync<Book>(sql);
-            return Result.Ok(books);
-        }
-        catch (Exception ex)
-        {
-            return Result.Fail($"Failed to retrieve books: {ex.Message}");
-        }
+        using var connection = DbConnectionFactory.Create();
+        return await connection.QueryAsync<Book>("usp_GetAllBooks", commandType: System.Data.CommandType.StoredProcedure);
     }
 
-    public async Task<Result<int>> CreateAsync(Book book)
+    public async Task<int> CreateAsync(Book book)
     {
-        try
-        {
-            if (book == null)
-                return Result.Fail("Book cannot be null");
+        if (book == null) throw new ArgumentNullException(nameof(book));
+        if (string.IsNullOrWhiteSpace(book.Title)) throw new ArgumentException("Book title is required", nameof(book.Title));
+        if (string.IsNullOrWhiteSpace(book.Author)) throw new ArgumentException("Book author is required", nameof(book.Author));
 
-            if (string.IsNullOrWhiteSpace(book.Title))
-                return Result.Fail("Book title is required");
+        using var connection = DbConnectionFactory.Create();
+        var parameters = new DynamicParameters();
+        parameters.Add("@Title", book.Title);
+        parameters.Add("@Author", book.Author);
+        parameters.Add("@Genre", book.Genre);
+        parameters.Add("@Price", book.Price);
+        parameters.Add("@NewId", dbType: System.Data.DbType.Int32, direction: System.Data.ParameterDirection.Output);
 
-            if (string.IsNullOrWhiteSpace(book.Author))
-                return Result.Fail("Book author is required");
+        await connection.ExecuteAsync("usp_CreateBook", parameters, commandType: System.Data.CommandType.StoredProcedure);
 
-            using var connection = CreateConnection();
-            var sql = "INSERT INTO Books (Title, Author, Genre, Price) OUTPUT INSERTED.Id VALUES (@Title, @Author, @Genre, @Price);";
-            var bookId = await connection.ExecuteScalarAsync<int>(sql, book);
-            return Result.Ok(bookId);
-        }
-        catch (Exception ex)
-        {
-            return Result.Fail($"Failed to create book: {ex.Message}");
-        }
+        return parameters.Get<int>("@NewId");
     }
 }

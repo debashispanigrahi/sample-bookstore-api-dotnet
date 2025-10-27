@@ -8,6 +8,34 @@ public static class DbInitializer
 {
     public static void InitializeDatabase(string connectionString)
     {
+        // Ensure the target database exists by connecting to the server 'master' database first
+        var builder = new SqlConnectionStringBuilder(connectionString);
+        var databaseName = builder.InitialCatalog;
+        if (string.IsNullOrWhiteSpace(databaseName))
+        {
+            // Fallback database name if none specified
+            databaseName = "SmartBookStoreDB";
+            builder.InitialCatalog = databaseName;
+            connectionString = builder.ConnectionString;
+        }
+
+        var masterBuilder = new SqlConnectionStringBuilder(connectionString)
+        {
+            InitialCatalog = "master"
+        };
+
+        using (var masterConnection = new SqlConnection(masterBuilder.ConnectionString))
+        {
+            masterConnection.Open();
+
+            var createDbCmd = $@"IF DB_ID(N'{databaseName}') IS NULL
+                                BEGIN
+                                    CREATE DATABASE [{databaseName}];
+                                END";
+
+            masterConnection.Execute(createDbCmd);
+        }
+
         using var connection = new SqlConnection(connectionString);
         connection.Open();
 

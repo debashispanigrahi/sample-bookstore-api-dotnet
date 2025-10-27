@@ -3,6 +3,7 @@ using MediatR;
 using SmartBookStore.API.Models;
 using SmartBookStore.API.Repositories;
 using SmartBookStore.API.Services;
+using SmartBookStore.API.Helpers;
 
 namespace SmartBookStore.API.CQRS.Commands;
 
@@ -37,7 +38,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
             return Result.Fail<AuthResponse>("Invalid username or password");
         }
 
-        if (!UserRepository.VerifyPassword(request.Password, user.Salt, user.PasswordHash))
+        if (!SecurityHelper.VerifyPassword(request.Password, user.Salt, user.PasswordHash))
         {
             return Result.Fail<AuthResponse>("Invalid username or password");
         }
