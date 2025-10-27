@@ -3,6 +3,7 @@ using FluentResults;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using SmartBookStore.API.CQRS.Commands;
 using SmartBookStore.API.CQRS.Queries;
@@ -18,47 +19,44 @@ namespace SmartBookStore.API.Controllers
     public class BooksController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
-        public async Task<IResult> GetBooks()
+        public async Task<Results<Ok<ApiResponse>, InternalServerError<ApiResponse>, BadRequest<ApiResponse>, NotFound<ApiResponse>>> GetBooks()
         {
             var result = await mediator.Send(new GetBooksQuery());
 
-            if (result.IsFailed)
+            if (!result.IsSuccess)
             {
-                return TypedResults.BadRequest(ApiResponse<IEnumerable<Book>>.Failure(
-                    result.Errors.First().Message,
-                    HttpStatusCode.BadRequest));
+                return result.StatusCode switch
+                {
+                    HttpStatusCode.BadRequest => TypedResults.BadRequest(result),
+                    HttpStatusCode.NotFound => TypedResults.NotFound(result),
+                    HttpStatusCode.InternalServerError => TypedResults.InternalServerError(result),
+                    _ => TypedResults.BadRequest(result)
+                };
             }
-
-            if (result.Value == null)
-            {
-                return TypedResults.NotFound(ApiResponse<IEnumerable<Book>>.Failure(
-                    "No books found",
-                    HttpStatusCode.NotFound));
-            }
-
-            return TypedResults.Ok(ApiResponse<IEnumerable<Book>>.Success(result.Value));
+            return TypedResults.Ok(result);
         }
 
         [HttpPost]
-        public async Task<IResult> CreateBook([FromBody] Book book)
+        public async Task<Results<Ok<ApiResponse>, InternalServerError<ApiResponse>, BadRequest<ApiResponse>>> CreateBook([FromBody] Book book)
         {
             if (book == null)
             {
-                return TypedResults.BadRequest(ApiResponse<int>.Failure(
-                    "Book data is required",
-                    HttpStatusCode.BadRequest));
+                return TypedResults.BadRequest(
+                    new ApiResponse { StatusCode = HttpStatusCode.BadRequest, ErrorMessage = "Invalid request" });
             }
 
-            var result = await mediator.Send(new CreateBookCommand(book));
+            var result = await mediator.Send(new CreateBookCommand { Book = book });
 
-            if (result.IsFailed)
+            if (!result.IsSuccess)
             {
-                return TypedResults.BadRequest(ApiResponse<int>.Failure(
-                    result.Errors.First().Message,
-                    HttpStatusCode.BadRequest));
+                return result.StatusCode switch
+                {
+                    HttpStatusCode.BadRequest => TypedResults.BadRequest(result),
+                    HttpStatusCode.InternalServerError => TypedResults.InternalServerError(result),
+                    _ => TypedResults.BadRequest(result)
+                };
             }
-
-            return TypedResults.Ok(ApiResponse<int>.Success(result.Value));
+            return TypedResults.Ok(result);
         }
     }
 }

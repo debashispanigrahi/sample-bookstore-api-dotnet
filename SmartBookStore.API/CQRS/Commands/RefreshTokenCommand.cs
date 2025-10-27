@@ -1,40 +1,31 @@
-using FluentResults;
 using MediatR;
 using SmartBookStore.API.Models;
 using SmartBookStore.API.Repositories;
 using SmartBookStore.API.Services;
+using System.Net;
 
 namespace SmartBookStore.API.CQRS.Commands;
 
-public record RefreshTokenCommand(int UserId) : IRequest<Result<AuthResponse>>;
+public record RefreshTokenCommand(int UserId) : IRequest<ApiResponse>;
 
-public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, Result<AuthResponse>>
+public class RefreshTokenCommandHandler(
+    IUserRepository userRepository,
+    ITokenService tokenService) : IRequestHandler<RefreshTokenCommand, ApiResponse>
 {
-    private readonly IUserRepository _userRepository;
-    private readonly ITokenService _tokenService;
-
-    public RefreshTokenCommandHandler(
-        IUserRepository userRepository,
-        ITokenService tokenService)
+    public async Task<ApiResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
-        _userRepository = userRepository;
-        _tokenService = tokenService;
-    }
-
-    public async Task<Result<AuthResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
-    {
-        var user = await _userRepository.GetByIdAsync(request.UserId);
+        var user = await userRepository.GetByIdAsync(request.UserId);
         if (user == null)
         {
-            return Result.Fail<AuthResponse>("User not found");
+            return new ApiResponse { StatusCode = HttpStatusCode.NotFound, ErrorMessage = "User not found" };
         }
 
         if (!user.IsActive)
         {
-            return Result.Fail<AuthResponse>("Account is disabled");
+            return new ApiResponse { StatusCode = HttpStatusCode.Unauthorized, ErrorMessage = "Account is disabled" };
         }
 
-        var token = _tokenService.GenerateToken(user);
+        var token = tokenService.GenerateToken(user);
         var expiresAt = DateTime.UtcNow.AddMinutes(60);
 
         var response = new AuthResponse
@@ -46,6 +37,6 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             ExpiresAt = expiresAt
         };
 
-        return Result.Ok(response);
+        return new ApiResponse { Data = response, StatusCode = HttpStatusCode.OK };
     }
 }

@@ -1,56 +1,61 @@
-using FluentResults;
 using MediatR;
 using SmartBookStore.API.Models;
 using SmartBookStore.API.Repositories;
 using SmartBookStore.API.Services;
 using SmartBookStore.API.Helpers;
+using System.Net;
 
 namespace SmartBookStore.API.CQRS.Commands;
 
-public record LoginCommand(string Username, string Password) : IRequest<Result<AuthResponse>>;
+public record LoginCommand(string Username, string Password) : IRequest<ApiResponse>;
 
-public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResponse>>
+public class LoginCommandHandler(
+    IUserRepository userRepository,
+    ITokenService tokenService,
+    ILogger<LoginCommandHandler> logger) : IRequestHandler<LoginCommand, ApiResponse>
 {
-    private readonly IUserRepository _userRepository;
-    private readonly ITokenService _tokenService;
-    private readonly ILogger<LoginCommandHandler> _logger;
-
-    public LoginCommandHandler(
-        IUserRepository userRepository,
-        ITokenService tokenService,
-        ILogger<LoginCommandHandler> logger)
-    {
-        _userRepository = userRepository;
-        _tokenService = tokenService;
-        _logger = logger;
-    }
-
-    public async Task<Result<AuthResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
         {
-            return Result.Fail<AuthResponse>("Username and password are required");
+            return new ApiResponse
+            {
+                StatusCode = HttpStatusCode.BadRequest,
+                ErrorMessage = "Username and password are required"
+            };
         }
 
-        var user = await _userRepository.GetByUsernameAsync(request.Username);
+        var user = await userRepository.GetByUsernameAsync(request.Username);
         if (user == null)
         {
-            return Result.Fail<AuthResponse>("Invalid username or password");
+            return new ApiResponse
+            {
+                StatusCode = HttpStatusCode.Unauthorized,
+                ErrorMessage = "Invalid username or password"
+            };
         }
 
         if (!SecurityHelper.VerifyPassword(request.Password, user.Salt, user.PasswordHash))
         {
-            return Result.Fail<AuthResponse>("Invalid username or password");
+            return new ApiResponse
+            {
+                StatusCode = HttpStatusCode.Unauthorized,
+                ErrorMessage = "Invalid username or password"
+            };
         }
 
         if (!user.IsActive)
         {
-            return Result.Fail<AuthResponse>("Account is disabled");
+            return new ApiResponse
+            {
+                StatusCode = HttpStatusCode.Unauthorized,
+                ErrorMessage = "Account is disabled"
+            };
         }
 
-        await _userRepository.UpdateLastLoginAsync(user.Id);
+        await userRepository.UpdateLastLoginAsync(user.Id);
 
-        var token = _tokenService.GenerateToken(user);
+        var token = tokenService.GenerateToken(user);
         var expiresAt = DateTime.UtcNow.AddMinutes(60);
 
         var response = new AuthResponse
@@ -62,8 +67,12 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
             ExpiresAt = expiresAt
         };
 
-        _logger.LogInformation("User {Username} logged in successfully", user.Username);
+        logger.LogInformation("User {Username} logged in successfully", user.Username);
 
-        return Result.Ok(response);
+        return new ApiResponse
+        {
+            Data = response,
+            StatusCode = HttpStatusCode.OK
+        };
     }
 }

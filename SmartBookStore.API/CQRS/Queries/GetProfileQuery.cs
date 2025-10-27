@@ -1,33 +1,26 @@
-using FluentResults;
 using MediatR;
 using SmartBookStore.API.Models;
 using SmartBookStore.API.Repositories;
+using System.Net;
 
 namespace SmartBookStore.API.CQRS.Queries;
 
-public record GetProfileQuery(int UserId) : IRequest<Result<User>>;
+public record GetProfileQuery(int UserId) : IRequest<ApiResponse>;
 
-public class GetProfileQueryHandler : IRequestHandler<GetProfileQuery, Result<User>>
+public class GetProfileQueryHandler(IUserRepository userRepository) : IRequestHandler<GetProfileQuery, ApiResponse>
 {
-    private readonly IUserRepository _userRepository;
-
-    public GetProfileQueryHandler(IUserRepository userRepository)
+    public async Task<ApiResponse> Handle(GetProfileQuery request, CancellationToken cancellationToken)
     {
-        _userRepository = userRepository;
-    }
-
-    public async Task<Result<User>> Handle(GetProfileQuery request, CancellationToken cancellationToken)
-    {
-        var user = await _userRepository.GetByIdAsync(request.UserId);
+        var user = await userRepository.GetByIdAsync(request.UserId);
         if (user == null)
         {
-            return Result.Fail<User>("User not found");
+            return new ApiResponse { StatusCode = HttpStatusCode.NotFound, ErrorMessage = "User not found" };
         }
 
         // Don't return sensitive information
         user.PasswordHash = string.Empty;
         user.Salt = string.Empty;
 
-        return Result.Ok(user);
+        return new ApiResponse { Data = user, StatusCode = HttpStatusCode.OK };
     }
 }

@@ -1,30 +1,46 @@
-using System;
 using FluentResults;
 using MediatR;
+using SmartBookStore.API.CQRS.Queries;
 using SmartBookStore.API.Models;
 using SmartBookStore.API.Repositories;
+using System.Net;
 
 namespace SmartBookStore.API.CQRS.Commands;
 
-public record CreateBookCommand(Book Book) : IRequest<Result<int>>;
-
-public class CreateBookHandler(IBookRepository repository) : IRequestHandler<CreateBookCommand, Result<int>>
+public record CreateBookCommand : IRequest<ApiResponse>
 {
-    public async Task<Result<int>> Handle(CreateBookCommand request, CancellationToken cancellationToken)
+    public required Book Book { get; set; }
+}
+
+public class CreateBookHandler(IBookRepository repository) : IRequestHandler<CreateBookCommand, ApiResponse>
+{
+    public async Task<ApiResponse> Handle(CreateBookCommand request, CancellationToken cancellationToken)
     {
-        try
+        if (cancellationToken.IsCancellationRequested)
         {
-            var newId = await repository.CreateAsync(request.Book);
-            return Result.Ok(newId);
+            return new ApiResponse
+            {
+                StatusCode = HttpStatusCode.BadRequest,
+                ErrorMessage = "Request was cancelled."
+            };
         }
-        catch (ArgumentException ex)
+
+        var newId = await repository.CreateAsync(request.Book);
+
+        if (newId < 1)
         {
-            return Result.Fail<int>(ex.Message);
+            return new ApiResponse
+            {
+                StatusCode = HttpStatusCode.InternalServerError,
+                ErrorMessage = "Failed to insert books."
+            };
         }
-        catch (Exception ex)
+
+        return new ApiResponse
         {
-            return Result.Fail<int>($"An error occurred while creating the book: {ex.Message}");
-        }
+            Data = newId,
+            StatusCode = HttpStatusCode.OK
+        };
     }
 }
 
