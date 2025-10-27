@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
+    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
+    <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
+    <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="FluentResults" Version="4.0.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.9.0" />
+  </ItemGroup>
+
+</Project>
