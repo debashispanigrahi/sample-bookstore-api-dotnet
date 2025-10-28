@@ -28,13 +28,17 @@ public class BookRepository : IBookRepository
         if (book == null) throw new ArgumentNullException(nameof(book));
         if (string.IsNullOrWhiteSpace(book.Title)) throw new ArgumentException("Book title is required", nameof(book.Title));
         if (string.IsNullOrWhiteSpace(book.Author)) throw new ArgumentException("Book author is required", nameof(book.Author));
+        if (string.IsNullOrWhiteSpace(book.Isbn)) throw new ArgumentException("Book ISBN is required", nameof(book.Isbn));
 
         using var connection = DbConnectionFactory.Create();
         var parameters = new DynamicParameters();
         parameters.Add("@Title", book.Title);
         parameters.Add("@Author", book.Author);
-        parameters.Add("@Genre", book.Genre);
+        parameters.Add("@Isbn", book.Isbn);
         parameters.Add("@Price", book.Price);
+        parameters.Add("@PublishedDate", book.PublishedDate);
+        parameters.Add("@Genre", book.Genre);
+        parameters.Add("@InStock", book.InStock);
         parameters.Add("@NewId", dbType: System.Data.DbType.Int32, direction: System.Data.ParameterDirection.Output);
 
         await connection.ExecuteAsync("usp_CreateBook", parameters, commandType: System.Data.CommandType.StoredProcedure);
