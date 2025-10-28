@@ -11,11 +11,7 @@ public class GetProfileQueryHandler(IUserRepository userRepository) : IRequestHa
 {
     public async Task<ApiResponse> Handle(GetProfileQuery request, CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetByIdAsync(request.UserId);
-        if (user == null)
-        {
-            return new ApiResponse { StatusCode = HttpStatusCode.NotFound, ErrorMessage = "User not found" };
-        }
+        var user = await userRepository.GetByIdAsync(request.UserId) ?? throw new KeyNotFoundException("User not found");
 
         // Don't return sensitive information
         user.PasswordHash = string.Empty;

@@ -18,39 +18,18 @@ public class LoginCommandHandler(
     {
         if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
         {
-            return new ApiResponse
-            {
-                StatusCode = HttpStatusCode.BadRequest,
-                ErrorMessage = "Username and password are required"
-            };
+            throw new ArgumentException("Username and password are required");
         }
 
-        var user = await userRepository.GetByUsernameAsync(request.Username);
-        if (user == null)
-        {
-            return new ApiResponse
-            {
-                StatusCode = HttpStatusCode.Unauthorized,
-                ErrorMessage = "Invalid username or password"
-            };
-        }
-
+        var user = await userRepository.GetByUsernameAsync(request.Username) ?? throw new UnauthorizedAccessException("Invalid username or password");
         if (!SecurityHelper.VerifyPassword(request.Password, user.Salt, user.PasswordHash))
         {
-            return new ApiResponse
-            {
-                StatusCode = HttpStatusCode.Unauthorized,
-                ErrorMessage = "Invalid username or password"
-            };
+            throw new UnauthorizedAccessException("Invalid username or password");
         }
 
         if (!user.IsActive)
         {
-            return new ApiResponse
-            {
-                StatusCode = HttpStatusCode.Unauthorized,
-                ErrorMessage = "Account is disabled"
-            };
+            throw new UnauthorizedAccessException("Account is disabled");
         }
 
         await userRepository.UpdateLastLoginAsync(user.Id);
@@ -72,7 +51,7 @@ public class LoginCommandHandler(
         return new ApiResponse
         {
             Data = response,
-            StatusCode = HttpStatusCode.OK
+            StatusCode = System.Net.HttpStatusCode.OK
         };
     }
 }

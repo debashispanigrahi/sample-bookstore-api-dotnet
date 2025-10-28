@@ -3,7 +3,6 @@ using MediatR;
 using SmartBookStore.API.CQRS.Queries;
 using SmartBookStore.API.Models;
 using SmartBookStore.API.Repositories;
-using System.Net;
 
 namespace SmartBookStore.API.CQRS.Commands;
 
@@ -16,31 +15,16 @@ public class CreateBookHandler(IBookRepository repository) : IRequestHandler<Cre
 {
     public async Task<ApiResponse> Handle(CreateBookCommand request, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return new ApiResponse
-            {
-                StatusCode = HttpStatusCode.BadRequest,
-                ErrorMessage = "Request was cancelled."
-            };
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         var newId = await repository.CreateAsync(request.Book);
 
         if (newId < 1)
         {
-            return new ApiResponse
-            {
-                StatusCode = HttpStatusCode.InternalServerError,
-                ErrorMessage = "Failed to insert books."
-            };
+            throw new InvalidOperationException("Failed to insert book.");
         }
 
-        return new ApiResponse
-        {
-            Data = newId,
-            StatusCode = HttpStatusCode.OK
-        };
+        return new ApiResponse { Data = newId, StatusCode = System.Net.HttpStatusCode.OK };
     }
 }
 

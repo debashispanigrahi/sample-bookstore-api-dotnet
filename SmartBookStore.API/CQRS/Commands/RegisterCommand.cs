@@ -19,24 +19,24 @@ public class RegisterCommandHandler(
             string.IsNullOrWhiteSpace(request.Email) || 
             string.IsNullOrWhiteSpace(request.Password))
         {
-            return new ApiResponse { StatusCode = HttpStatusCode.BadRequest, ErrorMessage = "Username, email, and password are required" };
+            throw new ArgumentException("Username, email, and password are required");
         }
 
         if (request.Password.Length < 6)
         {
-            return new ApiResponse { StatusCode = HttpStatusCode.BadRequest, ErrorMessage = "Password must be at least 6 characters long" };
+            throw new ArgumentException("Password must be at least 6 characters long");
         }
 
         var existingUserByUsername = await userRepository.GetByUsernameAsync(request.Username);
         if (existingUserByUsername != null)
         {
-            return new ApiResponse { StatusCode = HttpStatusCode.BadRequest, ErrorMessage = "Username already exists" };
+            throw new ArgumentException("Username already exists");
         }
 
         var existingUserByEmail = await userRepository.GetByEmailAsync(request.Email);
         if (existingUserByEmail != null)
         {
-            return new ApiResponse { StatusCode = HttpStatusCode.BadRequest, ErrorMessage = "Email already exists" };
+            throw new ArgumentException("Email already exists");
         }
 
         var registerRequest = new RegisterRequest
@@ -63,6 +63,6 @@ public class RegisterCommandHandler(
 
         logger.LogInformation("User {Username} registered successfully", newUser.Username);
 
-        return new ApiResponse { Data = response, StatusCode = HttpStatusCode.OK };
+        return new ApiResponse { Data = response, StatusCode = System.Net.HttpStatusCode.OK };
     }
 }

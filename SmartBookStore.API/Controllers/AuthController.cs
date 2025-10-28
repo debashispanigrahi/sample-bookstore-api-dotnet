@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartBookStore.API.CQRS.Commands;
 using SmartBookStore.API.CQRS.Queries;
+using Microsoft.AspNetCore.Http.HttpResults;
 using SmartBookStore.API.Models;
 using System.Net;
 
@@ -28,7 +29,7 @@ public class AuthController(IMediator mediator) : ControllerBase
         {
             return result.StatusCode switch
             {
-                HttpStatusCode.Unauthorized => Results.Json(result, statusCode: StatusCodes.Status401Unauthorized),
+                HttpStatusCode.Unauthorized => Results.Json(new ApiResponse { StatusCode = HttpStatusCode.Unauthorized, ErrorMessage = result.ErrorMessage }, statusCode: StatusCodes.Status401Unauthorized),
                 HttpStatusCode.BadRequest => TypedResults.BadRequest(result),
                 _ => TypedResults.BadRequest(result)
             };

@@ -19,44 +19,24 @@ namespace SmartBookStore.API.Controllers
     public class BooksController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
-        public async Task<Results<Ok<ApiResponse>, InternalServerError<ApiResponse>, BadRequest<ApiResponse>, NotFound<ApiResponse>>> GetBooks()
+        public async Task<Results<Ok<ApiResponse>, NotFound<ApiResponse>, BadRequest<ApiResponse>>> GetBooks()
         {
-            var result = await mediator.Send(new GetBooksQuery());
-
-            if (!result.IsSuccess)
-            {
-                return result.StatusCode switch
-                {
-                    HttpStatusCode.BadRequest => TypedResults.BadRequest(result),
-                    HttpStatusCode.NotFound => TypedResults.NotFound(result),
-                    HttpStatusCode.InternalServerError => TypedResults.InternalServerError(result),
-                    _ => TypedResults.BadRequest(result)
-                };
-            }
-            return TypedResults.Ok(result);
+            var books = await mediator.Send(new GetBooksQuery());
+            var apiResponse = new ApiResponse { Data = books, StatusCode = HttpStatusCode.OK };
+            return TypedResults.Ok(apiResponse);
         }
 
         [HttpPost]
-        public async Task<Results<Ok<ApiResponse>, InternalServerError<ApiResponse>, BadRequest<ApiResponse>>> CreateBook([FromBody] Book book)
+        public async Task<Results<Created<ApiResponse>, BadRequest<ApiResponse>>> CreateBook([FromBody] Book book)
         {
             if (book == null)
             {
-                return TypedResults.BadRequest(
-                    new ApiResponse { StatusCode = HttpStatusCode.BadRequest, ErrorMessage = "Invalid request" });
+                return TypedResults.BadRequest(new ApiResponse { StatusCode = HttpStatusCode.BadRequest, ErrorMessage = "Invalid request" });
             }
 
-            var result = await mediator.Send(new CreateBookCommand { Book = book });
-
-            if (!result.IsSuccess)
-            {
-                return result.StatusCode switch
-                {
-                    HttpStatusCode.BadRequest => TypedResults.BadRequest(result),
-                    HttpStatusCode.InternalServerError => TypedResults.InternalServerError(result),
-                    _ => TypedResults.BadRequest(result)
-                };
-            }
-            return TypedResults.Ok(result);
+            var bookId = await mediator.Send(new CreateBookCommand { Book = book });
+            var apiResponse = new ApiResponse { Data = bookId, StatusCode = HttpStatusCode.OK };
+            return TypedResults.Created($"/api/v1/books/{bookId}", apiResponse);
         }
     }
 }

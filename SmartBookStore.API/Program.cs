@@ -84,8 +84,6 @@ var app = builder.Build();
 // Add global exception handling middleware
 app.UseMiddleware<ExceptionMiddleware>();
 
-// Add API response middleware
-app.UseApiResponseMiddleware();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
