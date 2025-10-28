@@ -420,31 +420,31 @@ FodyWeavers.xsd
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
 # Angular App specific ignores
-"Angular App"/.angular/
-"Angular App"/dist/
-"Angular App"/tmp/
-"Angular App"/out-tsc/
-"Angular App"/bazel-out/
-"Angular App"/node_modules/
-"Angular App"/npm-debug.log
-"Angular App"/yarn-error.log
-"Angular App"/package-lock.json
-"Angular App"/.sass-cache/
-"Angular App"/connect.lock
-"Angular App"/coverage/
-"Angular App"/libpeerconnection.log
-"Angular App"/testem.log
-"Angular App"/typings/
-"Angular App"/.nyc_output/
-"Angular App"/.browserslistrc
+Angular App/.angular/
+Angular App/dist/
+Angular App/tmp/
+Angular App/out-tsc/
+Angular App/bazel-out/
+Angular App/node_modules/
+Angular App/npm-debug.log
+Angular App/yarn-error.log
+Angular App/package-lock.json
+Angular App/.sass-cache/
+Angular App/connect.lock
+Angular App/coverage/
+Angular App/libpeerconnection.log
+Angular App/testem.log
+Angular App/typings/
+Angular App/.nyc_output/
+Angular App/.browserslistrc
 
 # Angular App VS Code specific files
-"Angular App"/.vscode/
-"Angular App"/.history/
+Angular App/.vscode/
+Angular App/.history/
 
 # Angular App build and cache files
-"Angular App"/.angular/cache/
-"Angular App"/e2e/
+Angular App/.angular/cache/
+Angular App/e2e/
 
 # Compiled output (general)
 /dist

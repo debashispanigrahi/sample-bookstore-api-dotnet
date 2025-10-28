@@ -1,0 +1,35 @@
+.editable-cell {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.editable-cell:hover {
+  background-color: #f8f9fa;
+}
+
+.table-actions {
+  white-space: nowrap;
+  width: 1%;
+}
+
+.table-actions .btn {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.badge {
+  cursor: pointer;
+  padding: 0.5em 0.75em;
+}
+
+.table-warning {
+  --bs-table-bg: #fff3cd;
+}
+
+.table-success {
+  --bs-table-bg: #d1e7dd;
+}
+
+.form-control-sm, .form-select-sm {
+  min-width: 120px;
+}

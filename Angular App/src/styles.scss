@@ -1,0 +1,17 @@
+/* You can add global styles to this file, and also import other style files */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* Custom styles for the book store app */
+.editable-cell {
+  cursor: pointer;
+}
+
+.editable-cell input {
+  border: none;
+  background: transparent;
+  width: 100%;
+}
+
+.table-actions {
+  white-space: nowrap;
+}
