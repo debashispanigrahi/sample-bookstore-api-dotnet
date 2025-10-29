@@ -11,11 +11,12 @@ namespace SmartBookStore.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class AuthController(IMediator mediator) : ControllerBase
 {
     [HttpPost("login")]
     [AllowAnonymous]
-    public async Task<IResult> Login(LoginRequest request)
+    public async Task<Results<Ok<ApiResponse>, BadRequest<ApiResponse>>> Login(LoginRequest request)
     {
         if (request == null)
         {
@@ -29,7 +30,7 @@ public class AuthController(IMediator mediator) : ControllerBase
         {
             return result.StatusCode switch
             {
-                HttpStatusCode.Unauthorized => Results.Json(new ApiResponse { StatusCode = HttpStatusCode.Unauthorized, ErrorMessage = result.ErrorMessage }, statusCode: StatusCodes.Status401Unauthorized),
+                HttpStatusCode.Unauthorized => TypedResults.BadRequest(new ApiResponse { StatusCode = HttpStatusCode.Unauthorized, ErrorMessage = result.ErrorMessage }),
                 HttpStatusCode.BadRequest => TypedResults.BadRequest(result),
                 _ => TypedResults.BadRequest(result)
             };
@@ -40,7 +41,7 @@ public class AuthController(IMediator mediator) : ControllerBase
 
     [HttpPost("register")]
     [AllowAnonymous]
-    public async Task<IResult> Register(RegisterRequest request)
+    public async Task<Results<Ok<ApiResponse>, BadRequest<ApiResponse>>> Register(RegisterRequest request)
     {
         if (request == null)
         {
@@ -59,13 +60,12 @@ public class AuthController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("profile")]
-    [Authorize]
-    public async Task<IResult> GetProfile()
+    public async Task<Results<Ok<ApiResponse>, BadRequest<ApiResponse>>> GetProfile()
     {
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (!int.TryParse(userIdClaim, out var userId))
         {
-            return Results.Json(new ApiResponse { StatusCode = HttpStatusCode.Unauthorized, ErrorMessage = "Invalid user claim" }, statusCode: StatusCodes.Status401Unauthorized);
+            return TypedResults.BadRequest(new ApiResponse { StatusCode = HttpStatusCode.Unauthorized, ErrorMessage = "Invalid user claim" });
         }
 
         var query = new GetProfileQuery(userId);
@@ -81,12 +81,12 @@ public class AuthController(IMediator mediator) : ControllerBase
 
     [HttpPost("refresh")]
     [Authorize]
-    public async Task<IResult> RefreshToken()
+    public async Task<Results<Ok<ApiResponse>, BadRequest<ApiResponse>>> RefreshToken()
     {
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (!int.TryParse(userIdClaim, out var userId))
         {
-            return Results.Json(new ApiResponse { StatusCode = HttpStatusCode.Unauthorized, ErrorMessage = "Invalid user claim" }, statusCode: StatusCodes.Status401Unauthorized);
+            return TypedResults.BadRequest(new ApiResponse { StatusCode = HttpStatusCode.Unauthorized, ErrorMessage = "Invalid user claim" });
         }
 
         var command = new RefreshTokenCommand(userId);

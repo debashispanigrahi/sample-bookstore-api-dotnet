@@ -9,7 +9,7 @@ import { Book } from '../../models/book.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './book-list.component.html',
-  styleUrls: ['./book-list.component.scss']
+  styleUrls: ['./book-list.component.scss'],
 })
 export class BookListComponent implements OnInit {
   books: Book[] = [];
@@ -24,14 +24,24 @@ export class BookListComponent implements OnInit {
     price: 0,
     publishedDate: '',
     genre: '',
-    inStock: true
+    inStock: true,
   };
 
   constructor(private bookService: BookService) {}
 
   ngOnInit(): void {
-    this.bookService.loading$.subscribe(l => this.loading = l);
-    this.bookService.getBooks().subscribe(books => this.books = books);
+    this.loadBooks();
+  }
+
+  private loadBooks(): void {
+    this.loading = true;
+    this.bookService.getBooks().subscribe({
+      next: (books) => {
+        this.books = books;
+        this.loading = false;
+      },
+      error: () => (this.loading = false),
+    });
   }
 
   startEdit(book: Book): void {
@@ -48,15 +58,14 @@ export class BookListComponent implements OnInit {
   }
 
   saveEdit(): void {
-    if (this.editingBook) {
-      this.bookService.updateBook(this.editingBook).subscribe(() => this.cancelEdit());
-    }
+    // Update endpoint not implemented in backend yet
+    alert('Update is not implemented on the backend.');
+    this.cancelEdit();
   }
 
   deleteBook(id: number): void {
-    if (confirm('Are you sure you want to delete this book?')) {
-      this.bookService.deleteBook(id).subscribe();
-    }
+    // Delete endpoint not implemented in backend yet
+    alert('Delete is not implemented on the backend.');
   }
 
   startAddNew(): void {
@@ -72,10 +81,12 @@ export class BookListComponent implements OnInit {
   }
 
   validateNewBook(): boolean {
-    return this.newBook.title.trim() !== '' && 
-           this.newBook.author.trim() !== '' && 
-           this.newBook.isbn.trim() !== '' &&
-           this.newBook.price > 0;
+    return (
+      this.newBook.title.trim() !== '' &&
+      this.newBook.author.trim() !== '' &&
+      this.newBook.isbn.trim() !== '' &&
+      this.newBook.price > 0
+    );
   }
 
   private resetNewBook(): void {
@@ -86,7 +97,7 @@ export class BookListComponent implements OnInit {
       price: 0,
       publishedDate: '',
       genre: '',
-      inStock: true
+      inStock: true,
     };
   }
 

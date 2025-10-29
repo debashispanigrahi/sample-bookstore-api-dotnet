@@ -1,6 +1,25 @@
-<div class="container-fluid py-3 bg-light border-bottom mb-3">
-  <h2 class="mb-0">{{ title }}</h2>
+<nav
+  *ngIf="auth.isAuthenticated()"
+  class="navbar navbar-expand-lg navbar-light bg-light"
+>
+  <div class="container-fluid">
+    <a class="navbar-brand" routerLink="/">{{ title }}</a>
+    <div class="d-flex ms-auto align-items-center">
+      <span class="me-3">{{ (auth.user$ | async)?.username }}</span>
+      <button class="btn btn-outline-secondary" (click)="logout()">
+        Logout
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="d-flex">
+  <app-left-menu *ngIf="auth.isAuthenticated()"></app-left-menu>
+  <div class="flex-grow-1 p-3">
+    <router-outlet></router-outlet>
+  </div>
 </div>
-<div class="container">
-  <app-book-list></app-book-list>
+
+<div *ngIf="spinner.loading$ | async" class="spinner-backdrop">
+  <div class="spinner-border text-primary" role="status"></div>
 </div>

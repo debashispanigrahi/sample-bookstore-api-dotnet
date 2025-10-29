@@ -21,6 +21,19 @@ builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
+// CORS
+const string AngularLocalCorsPolicy = "AllowAngularLocal";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(AngularLocalCorsPolicy, policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 // Add JWT Authentication
 var jwtSecretKey = builder.Configuration["JWT:SecretKey"] ?? "your-super-secret-key-that-is-at-least-32-characters-long!";
 var jwtIssuer = builder.Configuration["JWT:Issuer"] ?? "SmartBookStore.API";
@@ -106,6 +119,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseIpRateLimiting();
+
+// Enable CORS
+app.UseCors(AngularLocalCorsPolicy);
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

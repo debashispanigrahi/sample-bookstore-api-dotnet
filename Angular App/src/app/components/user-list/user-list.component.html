@@ -1,0 +1,38 @@
+<div>
+  <h4>Users</h4>
+  <div class="mb-2">
+    <a
+      *ngIf="auth.hasRole('Admin')"
+      class="btn btn-sm btn-success"
+      routerLink="/signup"
+      >Create User</a
+    >
+  </div>
+  <div *ngIf="loading" class="text-center py-3">Loading...</div>
+  <div *ngIf="!loading && users.length === 0" class="alert alert-info">
+    No users available or API endpoint missing.
+  </div>
+  <table *ngIf="users.length" class="table">
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let u of users">
+        <td>{{ u.id }}</td>
+        <td>{{ u.username }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.role }}</td>
+        <td>
+          <button class="btn btn-sm btn-primary me-2" disabled>Edit</button>
+          <button class="btn btn-sm btn-danger" disabled>Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,21 @@
+<div class="d-flex flex-column bg-light vh-100 p-3" style="width: 220px">
+  <h5 class="mb-3">Menu</h5>
+  <a routerLink="/" routerLinkActive="active" class="mb-2 d-block">Books</a>
+  <a
+    *ngIf="auth.hasRole('Admin')"
+    routerLink="/users"
+    routerLinkActive="active"
+    class="mb-2 d-block"
+    >Users</a
+  >
+  <a
+    *ngIf="!auth.isAuthenticated()"
+    routerLink="/signup"
+    routerLinkActive="active"
+    class="mb-2 d-block"
+    >Sign Up</a
+  >
+  <div class="mt-auto">
+    <small class="text-muted">{{ (auth.user$ | async)?.username }}</small>
+  </div>
+</div>

@@ -1,0 +1,39 @@
+<div class="d-flex justify-content-center">
+  <div class="card p-4" style="min-width: 320px; max-width: 480px; width: 100%">
+    <h4 class="mb-3">Sign Up</h4>
+
+    <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+    <div *ngIf="success" class="alert alert-success">{{ success }}</div>
+
+    <div class="mb-2">
+      <label class="form-label">Username</label>
+      <input [(ngModel)]="username" class="form-control" />
+    </div>
+
+    <div class="mb-2">
+      <label class="form-label">Email</label>
+      <input [(ngModel)]="email" class="form-control" />
+    </div>
+
+    <div class="mb-2">
+      <label class="form-label">Password</label>
+      <input [(ngModel)]="password" type="password" class="form-control" />
+    </div>
+
+    <div class="mb-3" *ngIf="auth.hasRole('Admin')">
+      <label class="form-label">Role</label>
+      <select [(ngModel)]="role" class="form-select">
+        <option>User</option>
+        <option>Admin</option>
+      </select>
+    </div>
+    <div class="mb-3" *ngIf="!auth.hasRole('Admin')">
+      <label class="form-label">Role</label>
+      <input class="form-control" [value]="'User'" readonly />
+    </div>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-primary" (click)="submit()">Register</button>
+    </div>
+  </div>
+</div>
