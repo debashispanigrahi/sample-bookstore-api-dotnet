@@ -1,3 +1,4 @@
+using FluentResults;
 using MediatR;
 using SmartBookStore.API.Models;
 using SmartBookStore.API.Repositories;
@@ -6,14 +7,14 @@ using System.Net;
 
 namespace SmartBookStore.API.CQRS.Commands;
 
-public record RegisterCommand(string Username, string Email, string Password, string Role = "User") : IRequest<ApiResponse>;
+public record RegisterCommand(string Username, string Email, string Password, string Role = "User") : IRequest<Result<AuthResponse>>;
 
 public class RegisterCommandHandler(
     IUserRepository userRepository,
     ITokenService tokenService,
-    ILogger<RegisterCommandHandler> logger) : IRequestHandler<RegisterCommand, ApiResponse>
+    ILogger<RegisterCommandHandler> logger) : IRequestHandler<RegisterCommand, Result<AuthResponse>>
 {
-    public async Task<ApiResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
+    public async Task<Result<AuthResponse>> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Username) || 
             string.IsNullOrWhiteSpace(request.Email) || 
@@ -63,6 +64,6 @@ public class RegisterCommandHandler(
 
         logger.LogInformation("User {Username} registered successfully", newUser.Username);
 
-        return new ApiResponse { Data = response, StatusCode = System.Net.HttpStatusCode.OK };
+        return Result.Ok(response);
     }
 }

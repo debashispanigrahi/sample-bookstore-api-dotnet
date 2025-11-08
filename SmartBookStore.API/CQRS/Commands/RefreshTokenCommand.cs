@@ -1,3 +1,4 @@
+using FluentResults;
 using MediatR;
 using SmartBookStore.API.Models;
 using SmartBookStore.API.Repositories;
@@ -6,13 +7,13 @@ using System.Net;
 
 namespace SmartBookStore.API.CQRS.Commands;
 
-public record RefreshTokenCommand(int UserId) : IRequest<ApiResponse>;
+public record RefreshTokenCommand(int UserId) : IRequest<Result<AuthResponse>>;
 
 public class RefreshTokenCommandHandler(
     IUserRepository userRepository,
-    ITokenService tokenService) : IRequestHandler<RefreshTokenCommand, ApiResponse>
+    ITokenService tokenService) : IRequestHandler<RefreshTokenCommand, Result<AuthResponse>>
 {
-    public async Task<ApiResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
+    public async Task<Result<AuthResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
         var user = await userRepository.GetByIdAsync(request.UserId) ?? throw new KeyNotFoundException("User not found");
         if (!user.IsActive)
@@ -32,6 +33,6 @@ public class RefreshTokenCommandHandler(
             ExpiresAt = expiresAt
         };
 
-        return new ApiResponse { Data = response, StatusCode = HttpStatusCode.OK };
+        return Result.Ok(response);
     }
 }

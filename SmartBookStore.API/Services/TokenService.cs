@@ -23,10 +23,23 @@ public class TokenService : ITokenService
     public TokenService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _secretKey = _configuration["JWT:SecretKey"] ?? "your-super-secret-key-that-is-at-least-32-characters-long!";
-        _issuer = _configuration["JWT:Issuer"] ?? "SmartBookStore.API";
-        _audience = _configuration["JWT:Audience"] ?? "SmartBookStore.API";
-        _expirationMinutes = int.Parse(_configuration["JWT:ExpirationMinutes"] ?? "60");
+        _secretKey = _configuration["JWT:SecretKey"]
+            ?? throw new KeyNotFoundException("JWT:SecretKey not found in configuration.");
+
+        _issuer = _configuration["JWT:Issuer"]
+            ?? throw new KeyNotFoundException("JWT:Issuer not found in configuration.");
+
+        _audience = _configuration["JWT:Audience"]
+            ?? throw new KeyNotFoundException("JWT:Audience not found in configuration.");
+
+        var expirationValue = _configuration["JWT:ExpirationMinutes"]
+            ?? throw new KeyNotFoundException("JWT:ExpirationMinutes not found in configuration.");
+
+        if (!int.TryParse(expirationValue, out _expirationMinutes))
+        {
+            throw new FormatException("JWT:ExpirationMinutes must be a valid integer.");
+        }
+
     }
 
     public string GenerateToken(User user)

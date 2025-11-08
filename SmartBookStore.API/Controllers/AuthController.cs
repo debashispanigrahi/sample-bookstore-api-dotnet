@@ -26,17 +26,7 @@ public class AuthController(IMediator mediator) : ControllerBase
         var command = new LoginCommand(request.Username, request.Password);
         var result = await mediator.Send(command);
 
-        if (!result.IsSuccess)
-        {
-            return result.StatusCode switch
-            {
-                HttpStatusCode.Unauthorized => TypedResults.BadRequest(new ApiResponse { StatusCode = HttpStatusCode.Unauthorized, ErrorMessage = result.ErrorMessage }),
-                HttpStatusCode.BadRequest => TypedResults.BadRequest(result),
-                _ => TypedResults.BadRequest(result)
-            };
-        }
-
-        return TypedResults.Ok(result);
+        return TypedResults.Ok(new ApiResponse { Data = result.Value, StatusCode = HttpStatusCode.OK });
     }
 
     [HttpPost("register")]
@@ -51,12 +41,7 @@ public class AuthController(IMediator mediator) : ControllerBase
         var command = new RegisterCommand(request.Username, request.Email, request.Password, request.Role);
         var result = await mediator.Send(command);
 
-        if (!result.IsSuccess)
-        {
-            return TypedResults.BadRequest(result);
-        }
-
-        return TypedResults.Ok(result);
+        return TypedResults.Ok(new ApiResponse { Data = result.Value, StatusCode = HttpStatusCode.OK });
     }
 
     [HttpGet("profile")]
@@ -71,12 +56,12 @@ public class AuthController(IMediator mediator) : ControllerBase
         var query = new GetProfileQuery(userId);
         var result = await mediator.Send(query);
 
-        if (!result.IsSuccess)
+        if (result.IsFailed)
         {
-            return TypedResults.BadRequest(result);
+            return TypedResults.BadRequest(new ApiResponse { StatusCode = HttpStatusCode.BadRequest, ErrorMessage = result.Errors[0].Message });
         }
 
-        return TypedResults.Ok(result);
+        return TypedResults.Ok(new ApiResponse { Data = result.Value, StatusCode = HttpStatusCode.OK });
     }
 
     [HttpPost("refresh")]
@@ -92,11 +77,6 @@ public class AuthController(IMediator mediator) : ControllerBase
         var command = new RefreshTokenCommand(userId);
         var result = await mediator.Send(command);
 
-        if (!result.IsSuccess)
-        {
-            return TypedResults.BadRequest(result);
-        }
-
-        return TypedResults.Ok(result);
+        return TypedResults.Ok(new ApiResponse { Data = result.Value, StatusCode = HttpStatusCode.OK });
     }
 }

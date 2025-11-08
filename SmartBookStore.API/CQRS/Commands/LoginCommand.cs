@@ -4,17 +4,18 @@ using SmartBookStore.API.Repositories;
 using SmartBookStore.API.Services;
 using SmartBookStore.API.Helpers;
 using System.Net;
+using FluentResults;
 
 namespace SmartBookStore.API.CQRS.Commands;
 
-public record LoginCommand(string Username, string Password) : IRequest<ApiResponse>;
+public record LoginCommand(string Username, string Password) : IRequest<Result<AuthResponse>>;
 
 public class LoginCommandHandler(
     IUserRepository userRepository,
     ITokenService tokenService,
-    ILogger<LoginCommandHandler> logger) : IRequestHandler<LoginCommand, ApiResponse>
+    ILogger<LoginCommandHandler> logger) : IRequestHandler<LoginCommand, Result<AuthResponse>>
 {
-    public async Task<ApiResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<Result<AuthResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
         {
@@ -48,10 +49,6 @@ public class LoginCommandHandler(
 
         logger.LogInformation("User {Username} logged in successfully", user.Username);
 
-        return new ApiResponse
-        {
-            Data = response,
-            StatusCode = System.Net.HttpStatusCode.OK
-        };
+        return Result.Ok(response);
     }
 }

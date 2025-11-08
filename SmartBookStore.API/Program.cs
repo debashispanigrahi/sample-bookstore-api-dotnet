@@ -35,9 +35,12 @@ builder.Services.AddCors(options =>
 });
 
 // Add JWT Authentication
-var jwtSecretKey = builder.Configuration["JWT:SecretKey"] ?? "your-super-secret-key-that-is-at-least-32-characters-long!";
-var jwtIssuer = builder.Configuration["JWT:Issuer"] ?? "SmartBookStore.API";
-var jwtAudience = builder.Configuration["JWT:Audience"] ?? "SmartBookStore.API";
+var jwtSecretKey = builder.Configuration["JWT:SecretKey"]
+    ?? throw new InvalidOperationException("Missing configuration value: JWT:SecretKey.");
+var jwtIssuer = builder.Configuration["JWT:Issuer"]
+    ?? throw new InvalidOperationException("Missing configuration value: JWT:Issuer.");
+var jwtAudience = builder.Configuration["JWT:Audience"]
+    ?? throw new InvalidOperationException("Missing configuration value: JWT:Audience.");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -108,7 +111,7 @@ if (app.Environment.IsDevelopment())
         options.Theme = ScalarTheme.BluePlanet;
         options.ShowSidebar = true;
     });
-    
+
     // Redirect root to Scalar UI
     app.MapGet("/", context =>
     {

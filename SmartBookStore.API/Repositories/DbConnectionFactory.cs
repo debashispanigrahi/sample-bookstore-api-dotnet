@@ -10,20 +10,13 @@ public static class DbConnectionFactory
 
     static DbConnectionFactory()
     {
-        try
-        {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-                .AddEnvironmentVariables();
+        var builder = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables();
 
-            var configuration = builder.Build();
-            _defaultConnectionString = configuration.GetConnectionString("DefaultConnection");
-        }
-        catch
-        {
-            _defaultConnectionString = null;
-        }
+        var configuration = builder.Build();
+        _defaultConnectionString = configuration.GetConnectionString("DefaultConnection");
     }
 
     public static SqlConnection Create(string? connectionString = null)

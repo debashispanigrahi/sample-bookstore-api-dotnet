@@ -6,14 +6,14 @@ using SmartBookStore.API.Repositories;
 
 namespace SmartBookStore.API.CQRS.Commands;
 
-public record CreateBookCommand : IRequest<ApiResponse>
+public record CreateBookCommand : IRequest<Result<int>>
 {
     public required Book Book { get; set; }
 }
 
-public class CreateBookHandler(IBookRepository repository) : IRequestHandler<CreateBookCommand, ApiResponse>
+public class CreateBookHandler(IBookRepository repository) : IRequestHandler<CreateBookCommand, Result<int>>
 {
-    public async Task<ApiResponse> Handle(CreateBookCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateBookCommand request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -24,7 +24,7 @@ public class CreateBookHandler(IBookRepository repository) : IRequestHandler<Cre
             throw new InvalidOperationException("Failed to insert book.");
         }
 
-        return new ApiResponse { Data = newId, StatusCode = System.Net.HttpStatusCode.OK };
+        return Result.Ok(newId);
     }
 }
 

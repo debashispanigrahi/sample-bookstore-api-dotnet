@@ -1,15 +1,17 @@
 using System.Net;
+using FluentResults;
 using MediatR;
 using SmartBookStore.API.Models;
 using SmartBookStore.API.Repositories;
 
 namespace SmartBookStore.API.CQRS.Queries;
 
-public record GetBooksQuery : IRequest<ApiResponse>;
+public record GetBooksQuery : IRequest<Result<IEnumerable<Book?>>>;
+public record GetBookById(int Id) : IRequest<Result<Book?>>;
 
-public class GetBooksHandler(IBookRepository repository) : IRequestHandler<GetBooksQuery, ApiResponse>
+public class GetBooksHandler(IBookRepository repository) : IRequestHandler<GetBooksQuery, Result<IEnumerable<Book?>>>
 {
-    public async Task<ApiResponse> Handle(GetBooksQuery request, CancellationToken cancellationToken)
+    public async Task<Result<IEnumerable<Book?>>> Handle(GetBooksQuery request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -27,6 +29,28 @@ public class GetBooksHandler(IBookRepository repository) : IRequestHandler<GetBo
             throw new ArgumentException("One or more books contain invalid data.");
         }
 
-        return new ApiResponse { Data = books.ToList(), StatusCode = HttpStatusCode.OK };
+        return Result.Ok(books);
+    }
+}
+
+public class GetBookByIdHandler(IBookRepository repository) : IRequestHandler<GetBookById, Result<Book?>>
+{
+    public async Task<Result<Book?>> Handle(GetBookById request, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var book = await repository.GetByIdAsync(request.Id) ?? throw new InvalidOperationException("Failed to retrieve books.");
+        if (book == null)
+        {
+            throw new KeyNotFoundException("No books found.");
+        }
+
+        var invalidBook = string.IsNullOrWhiteSpace(book.Title) || book.Price < 0;
+        if (invalidBook)
+        {
+            throw new ArgumentException("Book contains invalid data.");
+        }
+
+        return Result.Ok<Book?>(book);
     }
 }

@@ -6,9 +6,9 @@ public static class SecurityHelper
 {
     public static bool VerifyPassword(string password, string salt, string hash)
     {
-        if (password == null) throw new ArgumentNullException(nameof(password));
-        if (salt == null) throw new ArgumentNullException(nameof(salt));
-        if (hash == null) throw new ArgumentNullException(nameof(hash));
+        ArgumentNullException.ThrowIfNull(password);
+        ArgumentNullException.ThrowIfNull(salt);
+        ArgumentNullException.ThrowIfNull(hash);
 
         var computedHash = HashPassword(password, salt);
         return computedHash == hash;

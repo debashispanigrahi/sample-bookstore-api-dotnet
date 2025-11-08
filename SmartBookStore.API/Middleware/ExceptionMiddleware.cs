@@ -1,5 +1,4 @@
 using System.Net;
-using FluentResults;
 using SmartBookStore.API.Models;
 
 namespace SmartBookStore.API.Middleware;
@@ -21,24 +20,30 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
 
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        context.Response.ContentType = "application/json";
-        
         var (statusCode, message) = exception switch
         {
-            ArgumentNullException or ArgumentException => (HttpStatusCode.BadRequest, "Invalid request parameters"),
-            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Unauthorized access"),
-            KeyNotFoundException => (HttpStatusCode.NotFound, "Resource not found"),
-            _ => (HttpStatusCode.InternalServerError, "An error occurred while processing your request")
+            ArgumentNullException or ArgumentException => (HttpStatusCode.BadRequest, "Invalid request parameters."),
+            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Unauthorized access."),
+            KeyNotFoundException => (HttpStatusCode.NotFound, "Resource not found."),
+            _ => (HttpStatusCode.InternalServerError, "An error occurred while processing your request.")
         };
 
-        var response = new ApiResponse 
-        { 
+        var response = new ApiResponse
+        {
             StatusCode = statusCode,
             ErrorMessage = message
         };
-        context.Response.StatusCode = (int)statusCode;
-        
-        await context.Response.WriteAsJsonAsync(response);
+
+        IResult result = statusCode switch
+        {
+            HttpStatusCode.BadRequest => TypedResults.BadRequest(response),
+            HttpStatusCode.Unauthorized => TypedResults.Unauthorized(),
+            HttpStatusCode.NotFound => TypedResults.NotFound(response),
+            _ => TypedResults.InternalServerError(response)
+        };
+
+        // Execute the result asynchronously
+        await result.ExecuteAsync(context);
     }
 }
 

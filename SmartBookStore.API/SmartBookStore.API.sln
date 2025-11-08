@@ -4,6 +4,8 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartBookStore.API", "SmartBookStore.API.csproj", "{E7C08E1E-DD15-B1F0-FC73-769001E8AED8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartBookStore.API.Test", "..\SmartBookStore.API.Test\SmartBookStore.API.Test.csproj", "{F6EDAADB-2A21-468E-90E8-66BEC8CAA034}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -14,6 +16,10 @@ Global
 		{E7C08E1E-DD15-B1F0-FC73-769001E8AED8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7C08E1E-DD15-B1F0-FC73-769001E8AED8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7C08E1E-DD15-B1F0-FC73-769001E8AED8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6EDAADB-2A21-468E-90E8-66BEC8CAA034}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6EDAADB-2A21-468E-90E8-66BEC8CAA034}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6EDAADB-2A21-468E-90E8-66BEC8CAA034}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6EDAADB-2A21-468E-90E8-66BEC8CAA034}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
